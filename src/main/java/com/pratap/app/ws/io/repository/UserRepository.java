@@ -1,4 +1,4 @@
-package com.pratap.app.ws.repository;
+package com.pratap.app.ws.io.repository;
 
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;

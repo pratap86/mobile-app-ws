@@ -7,4 +7,6 @@ import com.pratap.app.ws.shared.dto.UserDto;
 public interface UserService extends UserDetailsService{
 
 	public UserDto createUser(UserDto userDto);
+	
+	public UserDto getUser(String email);
 }

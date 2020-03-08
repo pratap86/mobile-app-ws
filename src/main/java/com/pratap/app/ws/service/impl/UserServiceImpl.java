@@ -11,7 +11,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.pratap.app.ws.io.entity.UserEntity;
-import com.pratap.app.ws.repository.UserRepository;
+import com.pratap.app.ws.io.repository.UserRepository;
 import com.pratap.app.ws.service.UserService;
 import com.pratap.app.ws.shared.Utils;
 import com.pratap.app.ws.shared.dto.UserDto;
@@ -53,6 +53,16 @@ public class UserServiceImpl implements UserService {
 			throw new UsernameNotFoundException(email);
 
 		return new User(userEntity.getEmail(), userEntity.getEncryptedPassword(), new ArrayList<>());
+	}
+
+	@Override
+	public UserDto getUser(String email) {
+		UserEntity userEntity = userRepository.findByEmail(email);
+		if (userEntity == null)
+			throw new UsernameNotFoundException(email);
+		UserDto returnValue = new UserDto();
+		BeanUtils.copyProperties(userEntity, returnValue);
+		return returnValue;
 	}
 
 }

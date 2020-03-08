@@ -5,6 +5,7 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import com.pratap.app.ws.service.UserService;
@@ -23,9 +24,13 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
 		http.csrf().disable().authorizeRequests()
-		.antMatchers(HttpMethod.POST, "/users")
+		.antMatchers(HttpMethod.POST, SecurityConstants.SIGN_UP_URL)
 		.permitAll()
-		.anyRequest().authenticated();
+		.anyRequest().authenticated().and()
+		.addFilter(getAuthenticationFilter())
+		.addFilter(new AuthorizationFilter(authenticationManager()))
+		.sessionManagement()// -> making your REST API state less
+		.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 	}
 
 	@Override
@@ -34,4 +39,15 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
 		auth.userDetailsService(userDetailsService).passwordEncoder(bCryptPasswordEncoder);
 	}
 
+	/**
+	 * 
+	 * @return
+	 * @throws Exception
+	 * <p>customized spring's default login url(/login)</p>
+	 */
+	protected AuthenticationFilter getAuthenticationFilter() throws Exception {
+	    final AuthenticationFilter filter = new AuthenticationFilter(authenticationManager());
+	    filter.setFilterProcessesUrl("/users/login");
+	    return filter;
+	}
 }
