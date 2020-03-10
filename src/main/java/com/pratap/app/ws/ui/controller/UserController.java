@@ -53,9 +53,22 @@ public class UserController {
 		return returnValue;
 	}
 	
-	@PutMapping
-	public String updateUser() {
-		return "update user was called";
+	@PutMapping(path = "/{id}",
+			consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE},
+			produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE}
+			)
+	public UserDetailsResponseModel updateUser(@PathVariable String id, @RequestBody UserDetailsRequestModel userDetailReq) {
+
+		UserDetailsResponseModel returnValue = new UserDetailsResponseModel();
+		UserDto userDto = new UserDto();
+		
+		if(userDetailReq.getFirstName().isEmpty()) throw new UserServiceException(ErrorMessages.MISSING_REQUIRED_FIELD.getErrorMessage());
+		
+		BeanUtils.copyProperties(userDetailReq, userDto);
+		UserDto updatedUser = userService.updateUser(id, userDto);
+		
+		BeanUtils.copyProperties(updatedUser, returnValue);
+		return returnValue;
 	}
 	
 	@DeleteMapping
