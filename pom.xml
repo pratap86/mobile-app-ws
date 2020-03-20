@@ -26,12 +26,12 @@
 		</dependency>
 
 		<!-- xml-json support dependency -->
-	<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.dataformat/jackson-dataformat-xml -->
-	<dependency>
-		<groupId>com.fasterxml.jackson.dataformat</groupId>
-		<artifactId>jackson-dataformat-xml</artifactId>
-	</dependency>
-		
+		<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.dataformat/jackson-dataformat-xml -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.dataformat</groupId>
+			<artifactId>jackson-dataformat-xml</artifactId>
+		</dependency>
+
 		<!-- spring data jpa -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -48,6 +48,13 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+
+		<!-- model mapper dependency -->
+		<dependency>
+			<groupId>org.modelmapper</groupId>
+			<artifactId>modelmapper</artifactId>
+			<version>2.3.0</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt -->

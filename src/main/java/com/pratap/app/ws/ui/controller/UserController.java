@@ -1,8 +1,11 @@
 package com.pratap.app.ws.ui.controller;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeToken;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -17,9 +20,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.pratap.app.ws.exceptions.UserServiceException;
+import com.pratap.app.ws.service.AddressService;
 import com.pratap.app.ws.service.UserService;
+import com.pratap.app.ws.shared.dto.AddressDto;
 import com.pratap.app.ws.shared.dto.UserDto;
 import com.pratap.app.ws.ui.model.request.UserDetailsRequestModel;
+import com.pratap.app.ws.ui.model.response.AddressResponseModel;
 import com.pratap.app.ws.ui.model.response.ErrorMessages;
 import com.pratap.app.ws.ui.model.response.OperationStatusModel;
 import com.pratap.app.ws.ui.model.response.RequestOperationStatus;
@@ -31,6 +37,12 @@ public class UserController {
 
 	@Autowired
 	private UserService userService;
+	
+	@Autowired
+	private ModelMapper modelMapper;
+	
+	@Autowired
+	private AddressService addressService;
 	
 	@GetMapping(path = "/{id}", 
 			produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
@@ -47,16 +59,12 @@ public class UserController {
 			produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE}
 			)
 	public UserDetailsResponseModel createUser(@RequestBody UserDetailsRequestModel userDetailReq) throws Exception {
-		UserDetailsResponseModel returnValue = new UserDetailsResponseModel();
-		UserDto userDto = new UserDto();
 		
 		if(userDetailReq.getFirstName().isEmpty()) throw new UserServiceException(ErrorMessages.MISSING_REQUIRED_FIELD.getErrorMessage());
-		
-		BeanUtils.copyProperties(userDetailReq, userDto);
+		// use ModelMapper instead of BeanUtils to map the objects bcz object contains another object
+		UserDto userDto = modelMapper.map(userDetailReq, UserDto.class);
 		UserDto createdUser = userService.createUser(userDto);
-		
-		BeanUtils.copyProperties(createdUser, returnValue);
-		return returnValue;
+		return modelMapper.map(createdUser, UserDetailsResponseModel.class);
 	}
 	
 	@PutMapping(path = "/{id}",
@@ -105,4 +113,27 @@ public class UserController {
 		
 		return returnValues;
 	}
+	//End-point http://localhost:8080/mobile-app-ws/users/<user-id>/address
+	@GetMapping(path = "/{id}/address", 
+			produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+	public List<AddressResponseModel> getUserAddresses(@PathVariable String id) {
+
+		List<AddressResponseModel> returnValue = new ArrayList<>();
+		List<AddressDto> addressesDto = addressService.getAddresses(id);
+		// go to ModelMapper generics - http://modelmapper.org/user-manual/generics/
+		if(addressesDto != null && !addressesDto.isEmpty()) {
+			Type listType = new TypeToken<List<AddressResponseModel>>() {}.getType();
+			returnValue = modelMapper.map(addressesDto, listType);
+		}
+		return returnValue;
+	}
+	
+	//End-point http://localhost:8080/mobile-app-ws/users/<user-id>/address/<address-id>
+		@GetMapping(path = "/{userId}/address/{addressId}", 
+				produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+		public AddressResponseModel getUserAddress(@PathVariable String addressId) {
+
+			AddressDto addressDto = addressService.getAddress(addressId);
+			return modelMapper.map(addressDto, AddressResponseModel.class);
+		}
 }
