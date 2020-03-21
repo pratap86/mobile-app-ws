@@ -1,6 +1,14 @@
 package com.pratap.app.ws.ui.model.response;
 
-public class AddressResponseModel {
+import org.springframework.hateoas.RepresentationModel;
+
+/**
+ * 
+ * @author Pratap Narayan
+ * <p>AddressResponseModel extends ResourceSupport changed to -> RepresentationModel to achieve the HATEOAS support </p>
+ *
+ */
+public class AddressResponseModel extends RepresentationModel<AddressResponseModel>{
 
 	private String addressId;
 	private String city;
