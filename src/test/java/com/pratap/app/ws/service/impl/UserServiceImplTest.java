@@ -64,8 +64,7 @@ class UserServiceImplTest {
 
 	@Mock
 	private BCryptPasswordEncoder bCryptPasswordEncoder;
-	
-//	@Mock
+
 	private Page<UserEntity> page;
 
 	private UserEntity userEntity;
@@ -75,9 +74,9 @@ class UserServiceImplTest {
 	private AddressDto shippingAddressDto;
 
 	private AddressDto billingAddressDto;
-	
+
 	private List<UserDto> userDtos;
-	
+
 	private List<UserEntity> userEntities = new ArrayList<>();
 
 	@BeforeEach
@@ -91,7 +90,7 @@ class UserServiceImplTest {
 		userEntity.setEmail(TEST_MAIL);
 		userEntity.setUserId(USER_ID);
 		userEntity.setEncryptedPassword(ENCRYPTED_PASS);
-		
+
 		userEntities.add(userEntity);
 
 		shippingAddressDto = new AddressDto();
@@ -120,19 +119,17 @@ class UserServiceImplTest {
 		userDto.setFirstName(FIRST_NAME);
 		userDto.setLastName(LAST_NAME);
 		userDto.setPassword(ENCRYPTED_PASS);
-		
+
 		UserDto secUserDto = new UserDto();
 		secUserDto.setAddresses(addresses);
 		secUserDto.setEmail(TEST_MAIL);
 		secUserDto.setFirstName(FIRST_NAME);
 		secUserDto.setLastName(LAST_NAME);
 		secUserDto.setPassword(ENCRYPTED_PASS);
-		
+
 		userDtos = new ArrayList<>();
 		userDtos.add(userDto);
-//		userDtos.add(secUserDto);
-		
-		page = new PageImpl<>(userEntities);
+
 	}
 
 	@Test
@@ -253,24 +250,24 @@ class UserServiceImplTest {
 			userServiceImpl.deleteUser(USER_ID);
 		});
 	}
-	
+
 	@Test
 	@DisplayName("Object not matched")
 	final void testGetUsers() {
-		
+		page = new PageImpl<>(userEntities);
 		Pageable pageableRequest = PageRequest.of(PAGE, LIMIT);
 		when(userRepository.findAll(pageableRequest)).thenReturn(page);
 		List<UserDto> users = userServiceImpl.getUsers(PAGE, LIMIT);
 		assertNotNull(users, "users details is null");
 		Assertions.assertSame(userEntities.get(0).getFirstName(), users.get(0).getFirstName());
 	}
-	
-//	@Test
+
+	@Test
 	final void testGetusers_UserServiceException() {
-		
+		List<UserEntity> userEntities = new ArrayList<>();
+		page = new PageImpl<>(userEntities);
 		Pageable pageableRequest = PageRequest.of(PAGE, LIMIT);
 		when(userRepository.findAll(pageableRequest)).thenReturn(page);
-		when(page.getContent()).thenReturn(null);
 		assertThrows(UserServiceException.class, () -> {
 			userServiceImpl.getUsers(PAGE, LIMIT);
 		});
