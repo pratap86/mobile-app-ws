@@ -6,6 +6,8 @@ import java.util.List;
 
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pratap.app.ws.exceptions.UserServiceException;
 import com.pratap.app.ws.service.AddressService;
 import com.pratap.app.ws.service.UserService;
@@ -38,6 +41,8 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 @RestController
 @RequestMapping("/users")
 public class UserController {
+	
+	private static final Logger log = LoggerFactory.getLogger(UserController.class);
 
 	@Autowired
 	private UserService userService;
@@ -47,6 +52,9 @@ public class UserController {
 	
 	@Autowired
 	private AddressService addressService;
+	
+	@Autowired
+	private ObjectMapper jsonMapper;
 	
 	@GetMapping(path = "/{id}", 
 			produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
@@ -64,10 +72,13 @@ public class UserController {
 			)
 	public UserDetailsResponseModel createUser(@RequestBody UserDetailsRequestModel userDetailReq) throws Exception {
 		
+		log.info("User Request Model {} ", jsonMapper.writeValueAsString(userDetailReq));
+		
 		if(userDetailReq.getFirstName().isEmpty()) throw new UserServiceException(ErrorMessages.MISSING_REQUIRED_FIELD.getErrorMessage());
-		// use ModelMapper instead of BeanUtils to map the objects bcz object contains another object
+		// use ModelMapper instead of BeanUtils to map the objects bcz its not feasible if any object contains another object
 		UserDto userDto = modelMapper.map(userDetailReq, UserDto.class);
 		UserDto createdUser = userService.createUser(userDto);
+		log.info("User Response Model {} ", jsonMapper.writeValueAsString(modelMapper.map(createdUser, UserDetailsResponseModel.class)));
 		return modelMapper.map(createdUser, UserDetailsResponseModel.class);
 	}
 	
@@ -161,4 +172,26 @@ public class UserController {
 		
 		return addressesRestModel;
 	}
+	
+	 /*
+     * http://localhost:8080/mobile-app-ws/users/email-verification?token=sdfsdf
+     * */
+    @GetMapping(path = "/email-verification", produces = { MediaType.APPLICATION_JSON_VALUE,
+            MediaType.APPLICATION_XML_VALUE })
+    public OperationStatusModel verifyEmailToken(@RequestParam(value = "token") String token) {
+
+        OperationStatusModel returnValue = new OperationStatusModel();
+        returnValue.setOperationName(RequestOperationName.VERIFY_EMAIL.name());
+        
+        // token provided in request has been verified here
+        boolean isVerified = userService.verifyEmailToken(token);
+        
+        if(isVerified) {
+        	returnValue.setOperationResult(RequestOperationStatus.SUCCESS.name());
+        } else {
+        	returnValue.setOperationResult(RequestOperationStatus.ERROR.name());
+        }
+        
+       return returnValue;
+    }
 }

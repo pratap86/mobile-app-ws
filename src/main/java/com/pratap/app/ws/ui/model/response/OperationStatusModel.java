@@ -1,5 +1,10 @@
 package com.pratap.app.ws.ui.model.response;
-
+/**
+ * 
+ * @author Pratap Narayan
+ * use for generic purpose like operationName : DELETE was operationResult : SUCCESSFULL or NOT SUCCESSFULL
+ *
+ */
 public class OperationStatusModel {
 
 	private String operationResult;

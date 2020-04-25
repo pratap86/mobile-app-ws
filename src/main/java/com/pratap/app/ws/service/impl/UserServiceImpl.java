@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -16,16 +18,28 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pratap.app.ws.exceptions.UserServiceException;
 import com.pratap.app.ws.io.entity.UserEntity;
 import com.pratap.app.ws.io.repository.UserRepository;
 import com.pratap.app.ws.service.UserService;
+import com.pratap.app.ws.shared.AmazonSES;
 import com.pratap.app.ws.shared.Utils;
 import com.pratap.app.ws.shared.dto.UserDto;
 import com.pratap.app.ws.ui.model.response.ErrorMessages;
 
+/**
+ * Implement {@link UserService}
+ * 
+ * @author Pratap Narayan
+ *
+ */
+
 @Service
 public class UserServiceImpl implements UserService {
+	
+	private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
 
 	@Autowired
 	private UserRepository userRepository;
@@ -35,13 +49,17 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	BCryptPasswordEncoder bCryptPasswordEncoder;
+	
+	@Autowired
+	ObjectMapper jsonMapper;
 
 	@Override
-	public UserDto createUser(UserDto userDto) {
-
+	public UserDto createUser(UserDto userDto) throws JsonProcessingException {
+		
+		log.info("createUser() method called with {} ", jsonMapper.writeValueAsString(userDto));
 		if (userRepository.findByEmail(userDto.getEmail()) != null)
 			throw new RuntimeException("Record already exist");
-		
+
 		//
 		AtomicInteger counter = new AtomicInteger(0);
 		userDto.getAddresses().forEach(address -> {
@@ -52,13 +70,21 @@ public class UserServiceImpl implements UserService {
 		ModelMapper modelMapper = new ModelMapper();
 		UserEntity userEntity = modelMapper.map(userDto, UserEntity.class);
 
-		String generateUserId = utils.generateUserId(30);
-		
+		String publicUserId = utils.generateUserId(30);
+
+		userEntity.setUserId(publicUserId);
 		userEntity.setEncryptedPassword(bCryptPasswordEncoder.encode(userDto.getPassword()));
-		userEntity.setUserId(generateUserId);
+		userEntity.setEmailVerificationToken(utils.generatedEmailVerificationToken(publicUserId));
+		userEntity.setEmailVerificationStatus(false);
 
 		UserEntity storedUserDetail = userRepository.save(userEntity);
-		return modelMapper.map(storedUserDetail, UserDto.class);
+		
+		UserDto returnValue = modelMapper.map(storedUserDetail, UserDto.class);
+		
+		// send an email message to user to verify their email address
+		new AmazonSES().verifyEmail(returnValue);
+		
+		return returnValue;
 	}
 
 	@Override
@@ -66,8 +92,10 @@ public class UserServiceImpl implements UserService {
 		UserEntity userEntity = userRepository.findByEmail(email);
 		if (userEntity == null)
 			throw new UsernameNotFoundException(email);
-
-		return new User(userEntity.getEmail(), userEntity.getEncryptedPassword(), new ArrayList<>());
+		
+		return new User(userEntity.getEmail(), userEntity.getEncryptedPassword(),
+				userEntity.getEmailVerificationStatus(), true, true, true, new ArrayList<>());
+		//return new User(userEntity.getEmail(), userEntity.getEncryptedPassword(), new ArrayList<>());
 	}
 
 	@Override
@@ -98,7 +126,7 @@ public class UserServiceImpl implements UserService {
 		if (userEntity == null)
 			throw new UserServiceException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage());
 		// Null Check
-		if(userEntity.getFirstName() != null && userEntity.getLastName() != null) {
+		if (userEntity.getFirstName() != null && userEntity.getLastName() != null) {
 			userEntity.setFirstName(userDto.getFirstName());
 			userEntity.setLastName(userDto.getLastName());
 		}
@@ -114,7 +142,7 @@ public class UserServiceImpl implements UserService {
 		if (userEntity == null)
 			throw new UserServiceException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage());
 		userRepository.delete(userEntity);
-		
+
 	}
 
 	@Override
@@ -131,6 +159,28 @@ public class UserServiceImpl implements UserService {
 			returnValues.add(userDto);
 		});
 		return returnValues;
+	}
+
+	@Override
+	public boolean verifyEmailToken(String token) {
+
+		boolean returnValue = false;
+
+		// Find user by token
+		UserEntity userEntity = userRepository.findUserByEmailVerificationToken(token);
+
+		if (userEntity != null) {
+			boolean hastokenExpired = Utils.hasTokenExpired(token);
+			if (!hastokenExpired) {
+				// erase token to prevent successive attempt
+				userEntity.setEmailVerificationToken(null);
+				userEntity.setEmailVerificationStatus(Boolean.TRUE);
+				userRepository.save(userEntity);
+				returnValue = true;
+			}
+		}
+
+		return returnValue;
 	}
 
 }

@@ -8,6 +8,8 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.pratap.app.ws.security.AppProperties;
 
 @SpringBootApplication
@@ -43,5 +45,10 @@ public class MobileAppWsApplication extends SpringBootServletInitializer {
 	public ModelMapper modelMapper() {
 		ModelMapper modelMapper = new ModelMapper();
 		return modelMapper;
+	}
+	
+	@Bean
+	public ObjectMapper jsonMapper() {
+		return new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
 	}
 }

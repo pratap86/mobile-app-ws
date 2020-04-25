@@ -82,6 +82,13 @@
 			<scope>provided</scope>
 		</dependency>
 
+		<!-- AWS SES dependency -->
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-java-sdk-ses</artifactId>
+			<version>1.11.768</version>
+		</dependency>
+
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
