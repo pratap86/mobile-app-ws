@@ -47,9 +47,6 @@ public class UserServiceImpl implements UserService {
 	private UserRepository userRepository;
 
 	@Autowired
-	private Utils utils;
-
-	@Autowired
 	BCryptPasswordEncoder bCryptPasswordEncoder;
 
 	@Autowired
@@ -69,17 +66,17 @@ public class UserServiceImpl implements UserService {
 		AtomicInteger counter = new AtomicInteger(0);
 		userDto.getAddresses().forEach(address -> {
 			address.setUserDetails(userDto);
-			address.setAddressId(utils.generateAddressId(30));
+			address.setAddressId(Utils.generateAddressId(30));
 			userDto.getAddresses().set(counter.getAndIncrement(), address);
 		});
 		ModelMapper modelMapper = new ModelMapper();
 		UserEntity userEntity = modelMapper.map(userDto, UserEntity.class);
 
-		String publicUserId = utils.generateUserId(30);
+		String publicUserId = Utils.generateUserId(30);
 
 		userEntity.setUserId(publicUserId);
 		userEntity.setEncryptedPassword(bCryptPasswordEncoder.encode(userDto.getPassword()));
-		userEntity.setEmailVerificationToken(utils.generatedEmailVerificationToken(publicUserId));
+		userEntity.setEmailVerificationToken(Utils.generatedEmailVerificationToken(publicUserId));
 		userEntity.setEmailVerificationStatus(false);
 
 		UserEntity storedUserDetail = userRepository.save(userEntity);
@@ -201,7 +198,7 @@ public class UserServiceImpl implements UserService {
 		}
 
 		// generate password reset token
-		String token = utils.generatePasswordResetToken(userEntity.getUserId());
+		String token = Utils.generatePasswordResetToken(userEntity.getUserId());
 
 		PasswordResetTokenEntity passwordResetTokenEntity = new PasswordResetTokenEntity();
 		// update PasswordResetTokenEntity with token & user details

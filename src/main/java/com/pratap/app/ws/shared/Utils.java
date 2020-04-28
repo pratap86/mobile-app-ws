@@ -4,29 +4,27 @@ import java.security.SecureRandom;
 import java.util.Date;
 import java.util.Random;
 
-import org.springframework.stereotype.Component;
-
 import com.pratap.app.ws.security.SecurityConstants;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-@Component
-public class Utils {
 
-	private final Random RANDOM = new SecureRandom();
-	private final String ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+public interface Utils {
 
-	public String generateUserId(int length) {
+	final Random RANDOM = new SecureRandom();
+	final String ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
+	public static String generateUserId(int length) {
 		return generateRandomString(length);
 	}
 
-	public String generateAddressId(int length) {
+	public static String generateAddressId(int length) {
 		return generateRandomString(length);
 	}
 
-	private String generateRandomString(int length) {
+	private static String generateRandomString(int length) {
 		StringBuilder returnValue = new StringBuilder(length);
 
 		for (int i = 0; i < length; i++) {
@@ -56,7 +54,7 @@ public class Utils {
 		return returnValue;
 	}
 	
-	public String generatedEmailVerificationToken(String userId) {
+	public static String generatedEmailVerificationToken(String userId) {
 		
 		String token = Jwts.builder()
                 .setSubject(userId)
@@ -67,7 +65,7 @@ public class Utils {
 		
 	}
 	
-	public String generatePasswordResetToken(String userId)
+	public static String generatePasswordResetToken(String userId)
     {
         String token = Jwts.builder()
                 .setSubject(userId)
