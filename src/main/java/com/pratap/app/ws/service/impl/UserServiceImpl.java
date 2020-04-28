@@ -21,7 +21,9 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pratap.app.ws.exceptions.UserServiceException;
+import com.pratap.app.ws.io.entity.PasswordResetTokenEntity;
 import com.pratap.app.ws.io.entity.UserEntity;
+import com.pratap.app.ws.io.repository.PasswordResetTokenRepository;
 import com.pratap.app.ws.io.repository.UserRepository;
 import com.pratap.app.ws.service.UserService;
 import com.pratap.app.ws.shared.AmazonSES;
@@ -38,7 +40,7 @@ import com.pratap.app.ws.ui.model.response.ErrorMessages;
 
 @Service
 public class UserServiceImpl implements UserService {
-	
+
 	private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
 
 	@Autowired
@@ -49,13 +51,16 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	BCryptPasswordEncoder bCryptPasswordEncoder;
-	
+
 	@Autowired
 	ObjectMapper jsonMapper;
+	
+	@Autowired
+	private PasswordResetTokenRepository passwordResetTokenRepository;
 
 	@Override
 	public UserDto createUser(UserDto userDto) throws JsonProcessingException {
-		
+
 		log.info("createUser() method called with {} ", jsonMapper.writeValueAsString(userDto));
 		if (userRepository.findByEmail(userDto.getEmail()) != null)
 			throw new RuntimeException("Record already exist");
@@ -78,12 +83,12 @@ public class UserServiceImpl implements UserService {
 		userEntity.setEmailVerificationStatus(false);
 
 		UserEntity storedUserDetail = userRepository.save(userEntity);
-		
+
 		UserDto returnValue = modelMapper.map(storedUserDetail, UserDto.class);
-		
+
 		// send an email message to user to verify their email address
 		new AmazonSES().verifyEmail(returnValue);
-		
+
 		return returnValue;
 	}
 
@@ -92,10 +97,11 @@ public class UserServiceImpl implements UserService {
 		UserEntity userEntity = userRepository.findByEmail(email);
 		if (userEntity == null)
 			throw new UsernameNotFoundException(email);
-		
+
 		return new User(userEntity.getEmail(), userEntity.getEncryptedPassword(),
 				userEntity.getEmailVerificationStatus(), true, true, true, new ArrayList<>());
-		//return new User(userEntity.getEmail(), userEntity.getEncryptedPassword(), new ArrayList<>());
+		// return new User(userEntity.getEmail(), userEntity.getEncryptedPassword(), new
+		// ArrayList<>());
 	}
 
 	@Override
@@ -179,6 +185,35 @@ public class UserServiceImpl implements UserService {
 				returnValue = true;
 			}
 		}
+
+		return returnValue;
+	}
+
+	@Override
+	public boolean requestPasswordReset(String email) {
+
+		boolean returnValue = false;
+
+		UserEntity userEntity = userRepository.findByEmail(email);
+
+		if (userEntity == null) {
+			return returnValue;
+		}
+
+		// generate password reset token
+		String token = utils.generatePasswordResetToken(userEntity.getUserId());
+
+		PasswordResetTokenEntity passwordResetTokenEntity = new PasswordResetTokenEntity();
+		// update PasswordResetTokenEntity with token & user details
+		passwordResetTokenEntity.setToken(token);
+		passwordResetTokenEntity.setUserDetails(userEntity);
+		
+		// and save this PRTEntity in to DB
+		passwordResetTokenRepository.save(passwordResetTokenEntity);
+
+		// once PRTEntity saved in to DB, send the mail to Client by calling AWS SES 
+		returnValue = new AmazonSES()
+						.sendPasswordResetRequest(userEntity.getFirstName(), userEntity.getEmail(), token);
 
 		return returnValue;
 	}

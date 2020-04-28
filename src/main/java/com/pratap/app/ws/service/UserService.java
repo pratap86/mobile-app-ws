@@ -31,4 +31,11 @@ public interface UserService extends UserDetailsService{
 	 * @return boolean value based on logic implementation
 	 */
 	boolean verifyEmailToken(String token);
+	
+	/**
+	 * password reset abstraction
+	 * @param email
+	 * @return success or fail
+	 */
+	boolean requestPasswordReset(String email);
 }
