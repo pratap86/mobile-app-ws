@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -25,6 +24,7 @@ import com.pratap.app.ws.io.entity.PasswordResetTokenEntity;
 import com.pratap.app.ws.io.entity.UserEntity;
 import com.pratap.app.ws.io.repository.PasswordResetTokenRepository;
 import com.pratap.app.ws.io.repository.UserRepository;
+import com.pratap.app.ws.security.UserPrincipal;
 import com.pratap.app.ws.service.UserService;
 import com.pratap.app.ws.shared.AmazonSES;
 import com.pratap.app.ws.shared.Utils;
@@ -84,19 +84,25 @@ public class UserServiceImpl implements UserService {
 		UserDto returnValue = modelMapper.map(storedUserDetail, UserDto.class);
 
 		// send an email message to user to verify their email address
-		new AmazonSES().verifyEmail(returnValue);
+		//new AmazonSES().verifyEmail(returnValue);
 
 		return returnValue;
 	}
 
+	// triggered by spring web security : UserDetailsService -> loadUserByUsername()
 	@Override
 	public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+		
 		UserEntity userEntity = userRepository.findByEmail(email);
 		if (userEntity == null)
 			throw new UsernameNotFoundException(email);
 
-		return new User(userEntity.getEmail(), userEntity.getEncryptedPassword(),
-				userEntity.getEmailVerificationStatus(), true, true, true, new ArrayList<>());
+		return new UserPrincipal(userEntity);
+		
+//		  return new User(userEntity.getEmail(), userEntity.getEncryptedPassword(),
+//		  userEntity.getEmailVerificationStatus(), true, true, true, new
+//		  ArrayList<>());
+		 
 		// return new User(userEntity.getEmail(), userEntity.getEncryptedPassword(), new
 		// ArrayList<>());
 	}

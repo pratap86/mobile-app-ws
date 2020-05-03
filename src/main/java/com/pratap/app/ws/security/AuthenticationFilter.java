@@ -13,7 +13,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,6 +33,11 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 	}
 
 
+	/**
+	 * Triggered the Authentication.
+	 * attemptAuthentication() triggered from http://localhost:8080/mobile-app-ws/users/login.
+	 * & locate the user by spring framework 1st made the call loadUserByUsername() 
+	 */
 	@Override
 	public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
 			throws AuthenticationException {
@@ -52,13 +56,16 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 		
 	}
 
+	/**
+	 * called only when authentication is successful
+	 */
 	@Override
     protected void successfulAuthentication(HttpServletRequest req,
                                             HttpServletResponse res,
                                             FilterChain chain,
                                             Authentication auth) throws IOException, ServletException {
         
-        String userName = ((User) auth.getPrincipal()).getUsername();  
+        String userName = ((UserPrincipal) auth.getPrincipal()).getUsername();  
         
         String token = Jwts.builder()
                 .setSubject(userName)

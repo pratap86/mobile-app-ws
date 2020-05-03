@@ -14,6 +14,7 @@ public class UserDetailsResponseModel {
 	private String lastName;
 	private String email;
 	private List<AddressResponseModel> addresses;
+	private List<RoleResponseModel> roles;
 
 	public String getUserId() {
 		return userId;
@@ -53,6 +54,14 @@ public class UserDetailsResponseModel {
 
 	public void setAddresses(List<AddressResponseModel> addresses) {
 		this.addresses = addresses;
+	}
+
+	public List<RoleResponseModel> getRoles() {
+		return roles;
+	}
+
+	public void setRoles(List<RoleResponseModel> roles) {
+		this.roles = roles;
 	}
 
 }

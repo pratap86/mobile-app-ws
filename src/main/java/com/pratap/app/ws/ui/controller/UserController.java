@@ -1,5 +1,8 @@
 package com.pratap.app.ws.ui.controller;
 
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,10 +11,10 @@ import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,9 +38,6 @@ import com.pratap.app.ws.ui.model.response.ErrorMessages;
 import com.pratap.app.ws.ui.model.response.OperationStatusModel;
 import com.pratap.app.ws.ui.model.response.RequestOperationStatus;
 import com.pratap.app.ws.ui.model.response.UserDetailsResponseModel;
-
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/users")
@@ -63,7 +63,8 @@ public class UserController {
 
 		UserDetailsResponseModel returnValue = new UserDetailsResponseModel();
 		UserDto userDto = userService.getUserByUserId(id);
-		BeanUtils.copyProperties(userDto, returnValue);
+		//BeanUtils.copyProperties(userDto, returnValue);
+		modelMapper.map(userDto, returnValue);
 		return returnValue;
 	}
 	
@@ -76,10 +77,14 @@ public class UserController {
 		log.info("User Request Model {} ", jsonMapper.writeValueAsString(userDetailReq));
 		
 		if(userDetailReq.getFirstName().isEmpty()) throw new UserServiceException(ErrorMessages.MISSING_REQUIRED_FIELD.getErrorMessage());
+		
 		// use ModelMapper instead of BeanUtils to map the objects bcz its not feasible if any object contains another object
 		UserDto userDto = modelMapper.map(userDetailReq, UserDto.class);
+		
 		UserDto createdUser = userService.createUser(userDto);
+		
 		log.info("User Response Model {} ", jsonMapper.writeValueAsString(modelMapper.map(createdUser, UserDetailsResponseModel.class)));
+		
 		return modelMapper.map(createdUser, UserDetailsResponseModel.class);
 	}
 	
@@ -94,16 +99,20 @@ public class UserController {
 		
 		if(userDetailReq.getFirstName().isEmpty()) throw new UserServiceException(ErrorMessages.MISSING_REQUIRED_FIELD.getErrorMessage());
 		
-		BeanUtils.copyProperties(userDetailReq, userDto);
+		//BeanUtils.copyProperties(userDetailReq, userDto);
+		modelMapper.map(userDetailReq, userDto);
 		UserDto updatedUser = userService.updateUser(id, userDto);
 		
-		BeanUtils.copyProperties(updatedUser, returnValue);
+		//BeanUtils.copyProperties(updatedUser, returnValue);
+		modelMapper.map(updatedUser, returnValue);
 		return returnValue;
 	}
 	
+	@Secured( "ROLE_ADMIN" )
 	@DeleteMapping(path = "/{id}",
 			produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
 	public OperationStatusModel deleteUser(@PathVariable String id) {
+		
 		OperationStatusModel returnValue = new OperationStatusModel();
 		returnValue.setOperationName(RequestOperationName.DELETE.name());
 		
@@ -123,7 +132,8 @@ public class UserController {
 		List<UserDto> users = userService.getUsers(page, limit);
 		users.forEach(userDto -> {
 			UserDetailsResponseModel userModel = new UserDetailsResponseModel();
-			BeanUtils.copyProperties(userDto, userModel);
+			//BeanUtils.copyProperties(userDto, userModel);
+			modelMapper.map(userDto, userModel);
 			returnValues.add(userModel);
 		});
 		
@@ -211,8 +221,9 @@ public class UserController {
 		  returnValue.setOperationName(RequestOperationName.REQUEST_PASSWORD_RESET.name());
 		  returnValue.setOperationResult(RequestOperationStatus.ERROR.name());
 		  
-		  if (operationResult) {
-		  returnValue.setOperationResult(RequestOperationStatus.SUCCESS.name()); }
+		if (operationResult) {
+			returnValue.setOperationResult(RequestOperationStatus.SUCCESS.name());
+		}
 		 
 
 		return returnValue;

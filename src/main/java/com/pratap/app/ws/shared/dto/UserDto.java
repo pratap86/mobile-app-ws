@@ -22,6 +22,7 @@ public class UserDto implements Serializable {
 	private String emailVerificationToken;
 	private Boolean emailVerificationStatus = false;
 	private List<AddressDto> addresses;
+	private List<RoleDto> roles;
 
 	public long getId() {
 		return id;
@@ -101,6 +102,14 @@ public class UserDto implements Serializable {
 
 	public void setAddresses(List<AddressDto> addresses) {
 		this.addresses = addresses;
+	}
+
+	public List<RoleDto> getRoles() {
+		return roles;
+	}
+
+	public void setRoles(List<RoleDto> roles) {
+		this.roles = roles;
 	}
 
 }
