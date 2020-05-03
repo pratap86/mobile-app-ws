@@ -1,4 +1,7 @@
 package com.pratap.app.ws.ui.model.request;
+
+import java.util.List;
+
 /**
  * 
  * @author pratap narayan
@@ -10,6 +13,8 @@ public class UserDetailsRequestModel {
 	private String lastName;
 	private String email;
 	private String password;
+	private List<AddressRequestModel> addresses;
+	private List<RoleRequestModel> roles;
 
 	public String getFirstName() {
 		return firstName;
@@ -41,6 +46,22 @@ public class UserDetailsRequestModel {
 
 	public void setPassword(String password) {
 		this.password = password;
+	}
+
+	public List<AddressRequestModel> getAddresses() {
+		return addresses;
+	}
+
+	public void setAddresses(List<AddressRequestModel> addresses) {
+		this.addresses = addresses;
+	}
+
+	public List<RoleRequestModel> getRoles() {
+		return roles;
+	}
+
+	public void setRoles(List<RoleRequestModel> roles) {
+		this.roles = roles;
 	}
 
 }

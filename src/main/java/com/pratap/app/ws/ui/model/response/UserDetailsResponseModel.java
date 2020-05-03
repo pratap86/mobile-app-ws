@@ -1,5 +1,7 @@
 package com.pratap.app.ws.ui.model.response;
 
+import java.util.List;
+
 /**
  * 
  * @author pratap narayan
@@ -11,6 +13,8 @@ public class UserDetailsResponseModel {
 	private String firstName;
 	private String lastName;
 	private String email;
+	private List<AddressResponseModel> addresses;
+	private List<RoleResponseModel> roles;
 
 	public String getUserId() {
 		return userId;
@@ -42,6 +46,22 @@ public class UserDetailsResponseModel {
 
 	public void setEmail(String email) {
 		this.email = email;
+	}
+
+	public List<AddressResponseModel> getAddresses() {
+		return addresses;
+	}
+
+	public void setAddresses(List<AddressResponseModel> addresses) {
+		this.addresses = addresses;
+	}
+
+	public List<RoleResponseModel> getRoles() {
+		return roles;
+	}
+
+	public void setRoles(List<RoleResponseModel> roles) {
+		this.roles = roles;
 	}
 
 }
